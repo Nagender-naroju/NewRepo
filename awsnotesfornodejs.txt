@@ -1,0 +1,192 @@
+Amazon-Linux (2023):
+
+
+sudo yum update
+sudo su
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+. ~/.nvm/nvm.sh
+nvm install --lts
+sudo yum install -y nodejs
+sudo nano server.js
+
+npm init -y 
+npm install
+npm install express
+node server.js
+
+*After connecting to filezilla
+
+sudo yum install httpd
+sudo chown -R ec2-user:ec2-user /var/www/html
+
+sudo chown -R root:ec2-user /var/www 
+sudo chmod -R 770 -R /var/www
+sudo chmod -R 755 /var/www/html  (write permission for specifc folder)
+
+* mongodb connection
+
+ref: https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-amazon/
+
+in etc folder user following both commands
+mkdir data
+mkdir db
+
+change port number 0.0.0.0 in mongod.conf file
+(if you get this error mongosh: OpenSSL configuration error:
+0028CB5C587F0000:error:030000A9:digital envelope routines:alg_module_init:unknown option:../deps/openssl/openssl/crypto/evp/evp_cnf.c:61:name=rh-allow-sha1-signatures, value=yes  then use below commonds)
+
+sudo yum remove mongodb-mongosh
+sudo yum install mongodb-mongosh-shared-openssl3
+sudo yum install mongodb-mongosh
+
+
+
+==============================
+mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.1.1
+
+( TO RUN WEBSITE AND ADMIN PANEL ON DIFFRENT PORTS READ BELOW DESCRIPTION )
+
+To host a website on a different port than your admin panel using Nginx, you can create separate server blocks (virtual hosts) for each application, each listening on a different port. Here's a step-by-step guide to help you set up Nginx to host a website on one port and an admin panel on another port:
+
+1. Install Nginx (if not already installed):
+   If you haven't installed Nginx, you can do so based on your operating system. For example, on Ubuntu, you can use the following command:
+
+   
+   sudo apt-get update
+   sudo apt-get install nginx
+   
+
+2. Create a directory structure for your website and admin panel:
+   Organize your website and admin panel files in separate directories. For this example, let's assume you have your website files in /var/www/website and your admin panel files in /var/www/admin_panel.
+
+3. Configure your website on a specific port (e.g., 80):
+   Create a configuration file for your website. You can name it something like website.conf in the /etc/nginx/sites-available/ directory. Use the following as a sample configuration file:
+
+
+   server {
+       listen 80;
+       server_name your-website-domain.com www.your-website-domain.com;
+
+       root /var/www/website;
+       index index.html;
+
+       location / {
+           try_files $uri $uri/ =404;
+       }
+   }
+   
+
+   Replace your-website-domain.com with your actual domain name or IP address.
+
+4. Configure your admin panel on a different port (e.g., 8080):
+   Create a configuration file for your admin panel. You can name it something like admin_panel.conf in the /etc/nginx/sites-available/ directory. Use the following as a sample configuration file:
+
+   
+   server {
+       listen 8080;
+       server_name your-admin-panel-domain.com www.your-admin-panel-domain.com;
+
+       root /var/www/admin_panel;
+       index index.html;
+
+       location / {
+           try_files $uri $uri/ /index.html;
+       }
+   }
+   
+
+   Replace your-admin-panel-domain.com with your actual admin panel domain name or IP address.
+
+5. Enable the server blocks:
+   Create symbolic links for both server block configuration files in the /etc/nginx/sites-enabled/ directory. You can use the ln command to do this:
+
+   
+   sudo ln -s /etc/nginx/sites-available/website.conf /etc/nginx/sites-enabled/
+   sudo ln -s /etc/nginx/sites-available/admin_panel.conf /etc/nginx/sites-enabled/
+   
+
+6. Test the configuration:
+   Before applying the new configuration, it's a good practice to test it for syntax errors:
+
+   
+   sudo nginx -t
+   
+
+   If the configuration test is successful, you should see "syntax is okay" and "test is successful."
+
+7. Reload Nginx to apply the changes:
+
+   
+   sudo systemctl reload nginx
+   
+ Now, your website will be accessible on port 80, and your admin panel will be accessible on port 8080. Make sure to update DNS settings or configure your domain registrar to point to the appropriate IP address for each domain.
+
+after completeing above points add this line in nginx.conf
+ ==> include /etc/nginx/sites-enabled/*.*;
+
+after adding above line then test you'r configurations with below commond
+=>sudo nginx -t
+
+
+
+
+
+
+
+=========================For React deployment ========================
+how to install react provided in this link https://www.makeuseof.com/deploy-react-app-to-aws-ec2/
+
+sudo apt update
+
+sudo apt install nginx
+
+sudo systemctl start nginx
+
+sudo systemctl enable nginx
+
+sudo systemctl status nginx
+  
+cd /var/www/html/
+  
+
+systemctl restart nginx
+
+systemctl status  nginx
+
+sudo tail -f /var/log/nginx/error.log
+
+sudo ln -s /etc/nginx/sites-available/my_react_app.conf /etc/nginx/sites-enabled/
+
+
+for fixing mis configurations use below link
+https://yottasrc.com/wiki/article?t=nginx-configuration-file-missing-a-step-by-step-tutorial
+
+IF YOU WILL GET PERMISSION DENIED FOR SPECIFIC FOLDERS FOR NGINX SERVER THEN U CAN USE BELOW CMDS
+
+It appears that all the files and directories under /home/ubuntu/admin are owned by the ubuntu user and group, and they have read and write permissions for both the owner (ubuntu) and the group (ubuntu). However, the Nginx server might not have the necessary permissions to read files or traverse directories if it is not part of the ubuntu group.
+
+To grant Nginx access to these files, you need to ensure that the directories have the appropriate permissions that allow the Nginx server to access them. Typically, Nginx runs under the www-data user and group.
+
+You can try the following steps to grant Nginx access:
+
+Add Nginx to the Ubuntu Group:
+
+1)Add the Nginx user (www-data) to the ubuntu group:
+
+sudo usermod -aG ubuntu www-data  //this is the command
+
+2)Grant Group Access:
+
+Give group read and execute permissions on the directories:
+
+sudo chmod -R g+rx /home/ubuntu/admin  //this is the command
+
+NOTE:-This command recursively grants read and execute permissions to the ubuntu group on all files and directories under /home/ubuntu/admin.
+
+3)Restart Nginx:
+
+After making these changes, restart the Nginx service:
+
+sudo systemctl restart nginx //this is the command
+
+NOTE:-This should grant Nginx the necessary permissions to access the files and directories under /home/ubuntu/admin. If you're still experiencing permission denied errors, double-check the Nginx configuration to ensure it's correctly configured to serve files from the correct directory and that there are no conflicting configurations. Additionally, check the Nginx error logs for any specific error messages related to permissions.
