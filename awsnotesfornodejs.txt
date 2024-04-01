@@ -1,6 +1,6 @@
 Amazon-Linux (2023):
 
-//Dummy Comment for PR.
+//Dummy Comment for PR. Ok, i will delete
 sudo yum update
 sudo su
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
